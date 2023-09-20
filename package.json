@@ -1,0 +1,27 @@
+{
+	"name": "gov.gcom",
+	"version": "1.0.0",
+	"author": "Charlot Tabade",
+	"contributors": [],
+	"browserslist": [
+		"since 2010",
+		"last 2 versions"
+	],
+	"devDependencies": {
+		"babel": "^6.23.0",
+		"browser-sync": "^2.29.3",
+		"del": "^7.1.0",
+		"gulp": "^4.0.2",
+		"gulp-autoprefixer": "^8.0.0",
+		"gulp-plumber": "^1.2.1",
+		"gulp-pug": "^5.0.0",
+		"gulp-sass": "^5.1.0",
+		"gulp-typescript": "^6.0.0-alpha.1",
+		"imports-loader": "^0.8.0",
+		"sass": "^1.67.0",
+		"ts-node": "^10.9.1"
+	},
+	"dependencies": {
+		"typescript": "^5.2.2"
+	}
+}
