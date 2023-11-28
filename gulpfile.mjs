@@ -1,95 +1,162 @@
-/*!
- * Gulp SMPL Layout Builder
- *
- * @version 8.3.3 (lite)
- * @author Artem Dordzhiev (Draft) | Cuberto
- * @type Module gulp
- * @license The MIT License (MIT)
- */
-
-/* Get plugins */
+"use strict";
 import gulp from "gulp";
-import pug from 'gulp-pug';
+import gutil from "gulp-util";
 import * as dartSass from 'sass';
 import gulpSass from 'gulp-sass';
-import browserSync from 'browser-sync';
-import plumber from 'gulp-plumber';
-import * as del from 'del';
-import ts from 'gulp-typescript';
-import autoprefixer from 'gulp-autoprefixer';
+import packageImporter from "node-sass-package-importer";
+import typescript from "gulp-typescript";
+import rename from "gulp-rename";
+import plumber from "gulp-plumber";
+import { onError } from "gulp-notify";
+import autoprefixer from "gulp-autoprefixer";
+import prettify from "gulp-prettify";
+import htmlhint from "gulp-htmlhint";
+import imagemin, { svgo, optipng, gifsicle } from 'gulp-imagemin';
+import changed from 'gulp-changed';
+import pngquant from 'imagemin-pngquant';
+import mozjpeg from 'imagemin-mozjpeg';
+import _browserSync from "browser-sync";
 
-/* Primary tasks */
-gulp.task('default', (done) => {
-  gulp.series('serve')(done)
-});
+const browserSync = _browserSync.create();
 
-gulp.task('serve', (done) => {
-  gulp.series('clean', gulp.parallel('pug', 'sass', 'js'), 'browsersync', 'watch')(done)
-});
+const PATHS = {
+  html: {
+    src: "./src/views/**/*.html",
+    dest: "./dist"
+  },
+  styles: {
+    src: "./src/scss/**/*.scss",
+    dest: "./dist/css"
+  },
+  scripts: {
+    src: "./src/typescript/**/*.ts",
+    dest: "./dist/js"
+  },
+  image: {
+    src: "./src/assets/image/**",
+    dest: "./dist/assets/image"
+  }
+};
 
-/* Pug task */
-gulp.task('pug', () => {
-  return gulp.src(['./src/pug/**/*.pug', '!./src/pug/_includes/**/*'])
-    .pipe(plumber())
-    .pipe(pug({
-      pretty: true,
-      basedir: "./src/pug/"
-    }))
-    .pipe(gulp.dest('./tmp/')).on('end', () => {
-      browserSync.reload();
-    });
-});
+// methods
+function errorHandler(err) {
+  if (err || (stats && stats.compilation.errors.length > 0)) {
+    const error = err || stats.compilation.errors[0].error;
+    onError({ message: "<%= error.message %>" })(error);
+    this.emit("end");
+  }
+}
 
-/* Sass task */
-const sass = gulpSass(dartSass);
-gulp.task('sass', () => {
-  return gulp.src('./src/scss/main.scss')
-    .pipe(sass({
-      "includePaths": "node_modules"
-    }))
-    .pipe(autoprefixer())
-    .pipe(gulp.dest('./tmp/assets/css/'))
-    .pipe(browserSync.stream({ match: '**/*.css' }));
-});
+// html
+function html() {
+  return gulp.src(PATHS.html.src, { since: gulp.lastRun(html) })
+    .pipe(
+      prettify({
+        indent_char: " ",
+        indent_size: 2,
+        unformatted: ["a", "span", "br"]
+      })
+    )
+    .pipe(gulp.dest(PATHS.html.dest));
+}
 
-/* JS (webpack) task */
-ts.createProject('tsconfig.json'); // Using tsconfig.json // https://www.npmjs.com/package/gulp-typescript#using-tsconfigjson
-gulp.task('js', function () {
-  return gulp.src('src/js/**/*.ts')
-    .pipe(ts({
-      noImplicitAny: true,
-      outFile: 'bundle.js'
-    }))
-    .pipe(gulp.dest('./tmp/assets/js'));
-});
+// scss
+function styles() {
+  const sass = gulpSass(dartSass);
+  return gulp.src(PATHS.styles.src)
+    .pipe(plumber({ errorHandler: errorHandler }))
+    .pipe(
+      sass({
+        outputStyle: "expanded",
+        importer: packageImporter({
+          extensions: [".scss", ".css"]
+        })
+      })
+    )
+    .pipe(
+      autoprefixer({
+        cascade: false
+      })
+    )
+    .pipe(gulp.dest(PATHS.styles.dest))
+    .pipe(
+      rename(function (path) {
+        if (/^style_/.test(path.basename)) {
+          path.basename = "style_latest";
+        }
+      })
+    )
+    .pipe(gulp.dest(PATHS.styles.dest))
+    .pipe(browserSync.stream());
+}
 
-/* Browsersync Server */
-gulp.task('browsersync', (done) => {
-  browserSync.init({
-    server: ["./tmp", "./src/static"],
-    notify: false,
-    ui: false,
-    online: false,
-    ghostMode: {
-      clicks: false,
-      forms: false,
-      scroll: false
-    }
-  });
+// typescript
+function ts() {
+  var tsProject = typescript.createProject('tsconfig.json');
+
+  return gulp.src(PATHS.scripts.src)
+    .pipe(tsProject())
+    .js.pipe(gulp.dest(PATHS.scripts.dest));
+}
+
+// images
+function image() {
+  return gulp.src(PATHS.image.src)
+    .pipe(plumber({ errorHandler: errorHandler }))
+    .pipe(changed(PATHS.image.dest))
+    .pipe(imagemin([
+      pngquant({
+        quality: '65-80',
+        speed: 1,
+        floyd: 0,
+      }),
+      mozjpeg({
+        quality: 85,
+        progressive: true
+      }),
+      svgo(),
+      optipng(),
+      gifsicle()
+    ]))
+    .pipe(gulp.dest(PATHS.image.dest))
+}
+
+// server
+const browserSyncOption = {
+  open: false,
+  port: 3000,
+  ui: {
+    port: 3001
+  },
+  server: {
+    baseDir: PATHS.html.dest, // output directory,
+    index: "index.html"
+  }
+};
+function browsersync(done) {
+  browserSync.init(browserSyncOption);
   done();
-});
+}
 
-/* Watcher */
-gulp.task('watch', () => {
-  global.isWatching = true;
+// browser reload
+function browserReload(done) {
+  browserSync.reload();
+  done();
+  console.info("Browser reload completed");
+}
 
-  gulp.watch("./src/scss/**/*.scss", gulp.series('sass'));
-  gulp.watch("./src/pug/**/*.pug", gulp.series('pug'));
-  gulp.watch("./src/js/**/*.*", gulp.series('js'));
-  gulp.watch("./config.json", gulp.parallel('pug', 'js'));
-});
+// watch
+function watchFiles(done) {
+  gulp.watch(PATHS.html.src, gulp.series(html, browserReload));
+  gulp.watch(PATHS.styles.src, styles);
+  gulp.watch(PATHS.scripts.src, ts);
+  gulp.watch(PATHS.image.src, image);
+  done();
+}
 
-/* FS tasks */
-gulp.task('clean', async () => {
-  return await del.deleteAsync(['./tmp/**/*'], { dot: true });
-});
+// commands
+const _default = gulp.series(
+  gulp.parallel(styles, html, ts, image),
+  gulp.series(browsersync, watchFiles)
+);
+export { _default as default };
