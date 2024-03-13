@@ -19,23 +19,35 @@ const tailwindPlugins = {
 };
 
 // Directories
-const distPath = "./dist";
+const distPath = "dist";
+
+const html_components = "src/views/components/**/*.html";
+const html_parts = "src/views/partials/**/*.html";
+const htmlDirectory = "src/views/**/*.html";
+
 const paths = {
   dist: distPath,
+  htmlDirectory,
+  html_components,
+  html_parts,
   html: {
-    src: "./src/views/**/*.html",
+    src: [
+      htmlDirectory,
+      `!${html_components}`, // ignore
+      `!${html_parts}`, // ignore
+    ],
     dest: distPath,
   },
   styles: {
-    src: "./src/scss/**/*.scss",
+    src: "src/scss/**/*.scss",
     dest: distPath + "/public/css"
   },
   scripts: {
-    src: "./src/typescript/**/*.ts",
+    src: "src/typescript/**/*.ts",
     dest: distPath + "/public/js"
   },
   image: {
-    src: "./src/assets/image/**",
+    src: "src/assets/image/**",
     dest: distPath + "/public/assets/image"
   }
 }

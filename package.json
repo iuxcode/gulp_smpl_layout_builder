@@ -26,6 +26,7 @@
         "eslint-plugin-prettier": "^5.0.1",
         "gulp-autoprefixer": "^9.0.0",
         "gulp-changed": "^5.0.1",
+        "gulp-file-include": "^2.3.0",
         "gulp-htmlhint": "^4.0.2",
         "gulp-imagemin": "^9.0.0",
         "gulp-notify": "^4.0.0",

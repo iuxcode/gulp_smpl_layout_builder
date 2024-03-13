@@ -1,6 +1,7 @@
 "use strict";
 
 import gulp from "gulp";
+import fileinclude from "gulp-file-include";
 import typescript from "gulp-typescript";
 import rename from "gulp-rename";
 import plumber from "gulp-plumber";
@@ -17,7 +18,6 @@ import gulpSass from 'gulp-sass';
 import postcss from "gulp-postcss";
 import packageImporter from "node-sass-package-importer";
 import tailwindcss from "tailwindcss";
-import concat from "gulp-concat";
 import uglify from "gulp-terser";
 import clean from "gulp-clean";
 import { paths, config } from "./configs.js";
@@ -85,6 +85,10 @@ function build_styles() {
 // html
 function build_html() {
   return gulp.src(paths.html.src, { since: gulp.lastRun(build_html) })
+    .pipe(fileinclude({
+      prefix: '@@',
+      basepath: '@file'
+    }))
     .pipe(
       prettify({
         indent_char: " ",
@@ -162,7 +166,10 @@ function buildFinish(done) {
 
 // watch
 function watchFiles(done) {
-  gulp.watch(paths.html.src, gulp.series(build_html, build_styles, hotReload));
+  gulp.watch(
+    paths.htmlDirectory,
+    gulp.series(build_html, build_styles, hotReload),
+  );
   gulp.watch(paths.styles.src, gulp.series(build_styles, hotReload));
   gulp.watch(paths.scripts.src, build_ts);
   gulp.watch(paths.image.src, build_images);
