@@ -1,69 +1,59 @@
 "use strict";
+
 import gulp from "gulp";
-import gutil from "gulp-util";
-import * as dartSass from 'sass';
-import gulpSass from 'gulp-sass';
-import packageImporter from "node-sass-package-importer";
 import typescript from "gulp-typescript";
 import rename from "gulp-rename";
 import plumber from "gulp-plumber";
 import { onError } from "gulp-notify";
 import autoprefixer from "gulp-autoprefixer";
 import prettify from "gulp-prettify";
-import htmlhint from "gulp-htmlhint";
 import imagemin, { svgo, optipng, gifsicle } from 'gulp-imagemin';
-import changed from 'gulp-changed';
 import pngquant from 'imagemin-pngquant';
 import mozjpeg from 'imagemin-mozjpeg';
+import changed from 'gulp-changed';
 import _browserSync from "browser-sync";
+import * as dartSass from 'sass';
+import gulpSass from 'gulp-sass';
+import postcss from "gulp-postcss";
+import packageImporter from "node-sass-package-importer";
+import tailwindcss from "tailwindcss";
+import concat from "gulp-concat";
+import uglify from "gulp-terser";
+import clean from "gulp-clean";
+import { paths, config } from "./configs.js";
 
 const browserSync = _browserSync.create();
 
-const PATHS = {
-  html: {
-    src: "./src/views/**/*.html",
-    dest: "./dist"
-  },
-  styles: {
-    src: "./src/scss/**/*.scss",
-    dest: "./dist/css"
-  },
-  scripts: {
-    src: "./src/typescript/**/*.ts",
-    dest: "./dist/js"
-  },
-  image: {
-    src: "./src/assets/image/**",
-    dest: "./dist/assets/image"
-  }
-};
 
-// methods
 function errorHandler(err) {
   if (err || (stats && stats.compilation.errors.length > 0)) {
+    console.error(
+      "\n",
+      "[-] Something went wrong: " + err.message + "\n",
+      JSON.stringify(err, 2)
+    )
+
     const error = err || stats.compilation.errors[0].error;
     onError({ message: "<%= error.message %>" })(error);
     this.emit("end");
   }
 }
 
-// html
-function html() {
-  return gulp.src(PATHS.html.src, { since: gulp.lastRun(html) })
-    .pipe(
-      prettify({
-        indent_char: " ",
-        indent_size: 2,
-        unformatted: ["a", "span", "br"]
-      })
-    )
-    .pipe(gulp.dest(PATHS.html.dest));
+// typescript
+function build_ts() {
+  var tsProject = typescript.createProject('tsconfig.json');
+
+  return gulp.src(paths.scripts.src)
+    .pipe(tsProject())
+    .pipe(uglify())
+    .pipe(gulp.dest(paths.scripts.dest));
 }
 
 // scss
-function styles() {
+function build_styles() {
   const sass = gulpSass(dartSass);
-  return gulp.src(PATHS.styles.src)
+
+  return gulp.src(paths.styles.src)
     .pipe(plumber({ errorHandler: errorHandler }))
     .pipe(
       sass({
@@ -73,12 +63,14 @@ function styles() {
         })
       })
     )
+    // .pipe(postcss([tailwindcss(config.tailwindjs), autoprefixer()]))
+    .pipe(postcss([tailwindcss(config.tailwindjs)]))
     .pipe(
       autoprefixer({
         cascade: false
       })
     )
-    .pipe(gulp.dest(PATHS.styles.dest))
+    .pipe(gulp.dest(paths.styles.dest))
     .pipe(
       rename(function (path) {
         if (/^style_/.test(path.basename)) {
@@ -86,24 +78,28 @@ function styles() {
         }
       })
     )
-    .pipe(gulp.dest(PATHS.styles.dest))
+    .pipe(gulp.dest(paths.styles.dest))
     .pipe(browserSync.stream());
 }
 
-// typescript
-function ts() {
-  var tsProject = typescript.createProject('tsconfig.json');
-
-  return gulp.src(PATHS.scripts.src)
-    .pipe(tsProject())
-    .js.pipe(gulp.dest(PATHS.scripts.dest));
+// html
+function build_html() {
+  return gulp.src(paths.html.src, { since: gulp.lastRun(build_html) })
+    .pipe(
+      prettify({
+        indent_char: " ",
+        indent_size: 2,
+        unformatted: ["a", "span", "br"]
+      })
+    )
+    .pipe(gulp.dest(paths.html.dest));
 }
 
 // images
-function image() {
-  return gulp.src(PATHS.image.src)
+function build_images() {
+  return gulp.src(paths.image.src)
     .pipe(plumber({ errorHandler: errorHandler }))
-    .pipe(changed(PATHS.image.dest))
+    .pipe(changed(paths.image.dest))
     .pipe(imagemin([
       pngquant({
         quality: '65-80',
@@ -118,45 +114,72 @@ function image() {
       optipng(),
       gifsicle()
     ]))
-    .pipe(gulp.dest(PATHS.image.dest))
+    .pipe(gulp.dest(paths.image.dest))
 }
 
-// server
-const browserSyncOption = {
-  open: false,
-  port: 3000,
-  ui: {
-    port: 3001
-  },
-  server: {
-    baseDir: PATHS.html.dest, // output directory,
-    index: "index.html"
-  }
-};
-function browsersync(done) {
-  browserSync.init(browserSyncOption);
+// Load Previews on Browser on dev
+function livePreview(done) {
+  browserSync.init({
+    open: config.open,
+    port: config.port,
+    ui: {
+      port: config.uiPort,
+    },
+    server: {
+      baseDir: paths.html.dest, // output directory,
+      index: "index.html"
+    }
+  });
   done();
 }
 
-// browser reload
-function browserReload(done) {
+// Triggers Browser reload
+function hotReload(done) {
   browserSync.reload();
   done();
-  console.info("Browser reload completed");
+  console.info("[+] Browser reload completed");
+}
+
+// Cleaning dist folder for fresh start.
+function cleanDist() {
+  console.log(
+    "\n",
+    "[!] Cleaning dist folder for fresh start.\n"
+  );
+  return gulp.src(paths.dist, { read: false, allowEmpty: true }).pipe(
+    clean()
+  );
+}
+
+// Production build is complete
+function buildFinish(done) {
+  console.log(
+    "\n\t",
+    `[+] Production build is complete. Files are located at ${options.paths.build.base}\n`
+  );
+  done();
 }
 
 // watch
 function watchFiles(done) {
-  gulp.watch(PATHS.html.src, gulp.series(html, browserReload));
-  gulp.watch(PATHS.styles.src, styles);
-  gulp.watch(PATHS.scripts.src, ts);
-  gulp.watch(PATHS.image.src, image);
+  gulp.watch(paths.html.src, gulp.series(build_html, build_styles, hotReload));
+  gulp.watch(paths.styles.src, gulp.series(build_styles, hotReload));
+  gulp.watch(paths.scripts.src, build_ts);
+  gulp.watch(paths.image.src, build_images);
   done();
 }
 
 // commands
 const _default = gulp.series(
-  gulp.parallel(styles, html, ts, image),
-  gulp.series(browsersync, watchFiles)
+  cleanDist,
+  gulp.parallel(build_styles, build_html, build_ts, build_images),
+  livePreview, watchFiles
 );
-export { _default as default };
+
+const _prod = gulp.series(
+  cleanDist,
+  gulp.parallel(build_styles, build_html, build_ts, build_images),
+  buildFinish,
+);
+
+export { _default as default, _prod as prod };
