@@ -1,0 +1,23 @@
+* {
+    box-sizing: border-box;
+    outline: none;
+    list-style: none;
+}
+
+a,
+button,
+.ct-button {
+    cursor: pointer;
+}
+
+.pin-spacer {
+    z-index: -var(zindex-6) !important;
+}
+
+.on-pin-spacer {
+    z-index: -var(zindex-5) !important;
+}
+
+.z-1 {
+    z-index: 1;
+}

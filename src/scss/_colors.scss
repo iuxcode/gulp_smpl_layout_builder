@@ -1,0 +1,63 @@
+:root {
+    --ct-primary: 77, 255, 181;
+    --ct-secondary: 25, 91, 255;
+    --ct-tertiary: 233, 94, 42;
+
+    --ct-background: 255, 255, 255;
+    --ct-background-inverse: 0, 0, 0;
+    --ct-surface: 221, 212, 198;
+
+    --ct-outline: 210, 199, 171;
+    --ct-outline-variant: 153, 189, 174;
+
+    --ct-text: 32, 75, 69; // 51, 73, 70; // 44, 62, 80;
+    --ct-text-accent: 0, 0, 0;
+    --ct-text-inverse: 242, 246, 247;
+
+    --ct-light: 242, 246, 247;
+    --ct-black: 0, 0, 0;
+}
+
+[class*="--primary"] {
+    --ct-color: var(--ct-primary);
+}
+
+[class*="--secondary"] {
+    --ct-color: var(--ct-secondary);
+}
+
+[class*="--tertiary"] {
+    --ct-color: var(--ct-tertiary);
+}
+
+[class*="--text"] {
+    --ct-color: var(--ct-text);
+}
+
+[class*="--accent"] {
+    --ct-color: var(--ct-text-accent);
+}
+
+[class*="--light"] {
+    --ct-color: var(--ct-light);
+}
+
+[class*="--default"] {
+    --ct-color: var(--ct-primary);
+}
+
+[class*="text--"] {
+    color: -color(color);
+}
+
+[class*="bg--"] {
+    background-color: -color(color);
+}
+
+.bg--surface {
+    background-color: -color(surface);
+}
+
+.bg--background {
+    background-color: -color(background);
+}

@@ -1,8 +1,66 @@
-@import url('https://fonts.cdnfonts.com/css/poppins');
-
+@import "./typography";
 @import "./tailwind";
 
+@import "./utils/functions";
+@import "./utils/mixins";
+@import "./vars";
+@import "./colors";
+@import "./reset";
+@import "./animations";
+
+html,
 body {
-    font-family: 'Poppins', sans-serif;
-    background-color: #FFFFFF;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+body {
+    font-family: "Poppins", sans-serif;
+    font-weight: normal;
+    font-style: normal;
+    font-size: 0.95rem;
+    margin: 0;
+    color: -color(text);
+    background: -color(background);
+
+    :focus {
+        outline: 0 !important;
+    }
+
+    ::-moz-selection {
+        background: -color(primary);
+        color: -color(text-accent);
+    }
+
+    ::selection {
+        background: -color(primary);
+        color: -color(text-accent);
+    }
+
+    .font--accent {
+        font-family: "poppins";
+    }
+
+    .overlay {
+        &::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            background-color: -color(black, 0.25);
+            z-index: 1;
+        }
+
+        &--dim::before {
+            background-color: -color(black, 0.55);
+        }
+
+        &--full::before {
+            background-color: -color(black, 0.85);
+        }
+    }
+
+    // Your pages imported here
 }
