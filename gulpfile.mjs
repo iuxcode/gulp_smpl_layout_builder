@@ -64,7 +64,8 @@ function build_ts() {
     .pipe(uglify())
     .pipe(sourcemaps.init({ loadMaps: true }))
     .pipe(sourcemaps.write('./'))
-    .pipe(gulp.dest(paths.scripts.dest));
+    .pipe(gulp.dest(paths.scripts.dest))
+    .pipe(browserSync.stream());
 }
 
 // scss
@@ -81,7 +82,7 @@ function build_styles() {
         })
       })
     )
-    .pipe(postcss([tailwindcss(config.tailwind)]))
+    .pipe(postcss())
     .pipe(
       autoprefixer({
         cascade: false
@@ -188,15 +189,15 @@ function watchFiles(done) {
   );
   gulp.watch(
     paths.styles.src,
-    gulp.series(build_styles, hotReload),
+    build_styles,
   );
   gulp.watch(
     paths.scripts.src,
-    gulp.series(build_ts, hotReload),
+    build_ts,
   );
   gulp.watch(
     paths.image.src,
-    gulp.series(build_images, hotReload),
+    build_images,
   );
   done();
 }
