@@ -8,15 +8,15 @@ const plugins = {
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./src/**/*.{html,js,php}"],
+  content: ["./src/**/*.{html,js,ts,jsx,tsx}"],
   darkMode: "class",
   theme: {
     extend: {},
   },
   plugins: Object.keys(plugins)
-    .filter((k) => options.plugins[k])
+    .filter((k) => options.config.plugins[k])
     .map((k) => {
-      if (k in options.plugins && options.plugins[k]) {
+      if (k in options.config.plugins && options.config.plugins[k]) {
         return plugins[k];
       }
     }),

@@ -2,7 +2,6 @@
 
 import gulp from "gulp";
 import fileinclude from "gulp-file-include";
-import typescript from "gulp-typescript";
 import rename from "gulp-rename";
 import plumber from "gulp-plumber";
 import { onError } from "gulp-notify";
@@ -20,6 +19,12 @@ import packageImporter from "node-sass-package-importer";
 import tailwindcss from "tailwindcss";
 import uglify from "gulp-terser";
 import clean from "gulp-clean";
+import browserify from 'browserify';
+import source from 'vinyl-source-stream';
+import tsify from 'tsify';
+import sourcemaps from 'gulp-sourcemaps';
+import buffer from 'vinyl-buffer';
+import babelify from 'babelify';
 import { paths, config } from "./configs.js";
 
 const browserSync = _browserSync.create();
@@ -41,11 +46,24 @@ function errorHandler(err) {
 
 // typescript
 function build_ts() {
-  var tsProject = typescript.createProject('tsconfig.json');
-
-  return gulp.src(paths.scripts.src)
-    .pipe(tsProject())
+  return browserify({
+    basedir: '.',
+    debug: true,
+    entries: paths.scripts.entries,
+    cache: {},
+    packageCache: {}
+  })
+    .plugin(tsify)
+    .transform(babelify, {
+      presets: ['@babel/preset-env'],
+      extensions: ['.ts']
+    })
+    .bundle()
+    .pipe(source('bundle.js'))
+    .pipe(buffer())
     .pipe(uglify())
+    .pipe(sourcemaps.init({ loadMaps: true }))
+    .pipe(sourcemaps.write('./'))
     .pipe(gulp.dest(paths.scripts.dest));
 }
 
@@ -63,14 +81,12 @@ function build_styles() {
         })
       })
     )
-    // .pipe(postcss([tailwindcss(config.tailwindjs), autoprefixer()]))
-    .pipe(postcss([tailwindcss(config.tailwindjs)]))
+    .pipe(postcss([tailwindcss(config.tailwind)]))
     .pipe(
       autoprefixer({
         cascade: false
       })
     )
-    .pipe(gulp.dest(paths.styles.dest))
     .pipe(
       rename(function (path) {
         if (/^style_/.test(path.basename)) {
@@ -84,7 +100,7 @@ function build_styles() {
 
 // html
 function build_html() {
-  return gulp.src(paths.html.src, { since: gulp.lastRun(build_html) })
+  return gulp.src(paths.html.src)
     .pipe(fileinclude({
       prefix: '@@',
       basepath: '@file'
@@ -150,7 +166,7 @@ function cleanDist() {
     "\n",
     "[!] Cleaning dist folder for fresh start.\n"
   );
-  return gulp.src(paths.dist, { read: false, allowEmpty: true }).pipe(
+  return gulp.src(paths.distDir, { read: false, allowEmpty: true }).pipe(
     clean()
   );
 }
@@ -167,12 +183,21 @@ function buildFinish(done) {
 // watch
 function watchFiles(done) {
   gulp.watch(
-    paths.htmlDirectory,
+    paths.html.watch,
     gulp.series(build_html, build_styles, hotReload),
   );
-  gulp.watch(paths.styles.src, gulp.series(build_styles, hotReload));
-  gulp.watch(paths.scripts.src, build_ts);
-  gulp.watch(paths.image.src, build_images);
+  gulp.watch(
+    paths.styles.src,
+    gulp.series(build_styles, hotReload),
+  );
+  gulp.watch(
+    paths.scripts.src,
+    gulp.series(build_ts, hotReload),
+  );
+  gulp.watch(
+    paths.image.src,
+    gulp.series(build_images, hotReload),
+  );
   done();
 }
 

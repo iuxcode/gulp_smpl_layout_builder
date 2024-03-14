@@ -8,52 +8,54 @@ const config = {
   // Browsersync includes a user-interface
   uiPort: 5000,
   // Tailwind config
-  tailwindjs: "./tailwind.config.js",
-};
-
-// tailwind plugins
-const tailwindPlugins = {
-  // typography: true,
-  // forms: true,
-  // containerQueries: true,
+  tailwind: {
+    config: "./tailwind.config.js",
+    plugins: {
+      // typography: true,
+      // forms: true,
+      // containerQueries: true,
+    }
+  },
 };
 
 // Directories
-const distPath = "dist";
+const baseDir = "src";
+const distDir = "dist";
 
-const html_components = "src/views/components/**/*.html";
-const html_parts = "src/views/partials/**/*.html";
-const htmlDirectory = "src/views/**/*.html";
+const html_components = `${baseDir}/views/components/**/*.html`;
+const html_partials = `${baseDir}/views/partials/**/*.html`;
+const html = `${baseDir}/views/**/*.html`
 
 const paths = {
-  dist: distPath,
-  htmlDirectory,
+  baseDir,
+  distDir,
   html_components,
-  html_parts,
+  html_partials,
   html: {
     src: [
-      htmlDirectory,
+      html,
       `!${html_components}`, // ignore
-      `!${html_parts}`, // ignore
+      `!${html_partials}`, // ignore
     ],
-    dest: distPath,
+    dest: distDir,
+    watch: html,
   },
   styles: {
     src: "src/scss/**/*.scss",
-    dest: distPath + "/public/css"
+    dest: `${distDir}/public/css`,
   },
   scripts: {
+    entries: ["src/typescript/main.ts"],
     src: "src/typescript/**/*.ts",
-    dest: distPath + "/public/js"
+    dest: `${distDir}/public/js`,
   },
   image: {
     src: "src/assets/image/**",
-    dest: distPath + "/public/assets/image"
+    dest: `${distDir}/public/assets/image`,
   }
 }
 
 module.exports = {
   config,
-  tailwindPlugins,
   paths,
 };
