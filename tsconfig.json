@@ -1,31 +1,16 @@
 {
     "compilerOptions": {
-        "module": "CommonJS",
-        "forceConsistentCasingInFileNames": true,
-        "skipLibCheck": true,
-        "isolatedModules": true,
-        "strict": true,
-        "noImplicitThis": true,
+        "target": "es2016",
+        "module": "commonjs",
+        "moduleResolution": "node",
         "esModuleInterop": true,
-        "types": [],
-        "allowJs": true,
-        "noEmit": true,
-        "resolveJsonModule": true,
-        "allowSyntheticDefaultImports": true,
-        "paths": {
-            "@": [
-                "../src"
-            ],
-            "@/*": [
-                "../src/*"
-            ]
-        }
-    },
-    "include": [
-        "src/typescript/*"
-    ],
-    "exclude": [
-        "node_modules",
-        "dist"
-    ]
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
+        "skipLibCheck": true,
+        "declaration": false,
+        "noImplicitAny": false,
+        "removeComments": true,
+        "sourceMap": true,
+        "lib": ["es2017"]
+    }
 }
