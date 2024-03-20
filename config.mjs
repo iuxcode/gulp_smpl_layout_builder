@@ -22,6 +22,13 @@ export default {
     outDir: `${BASE_DIST_DIR}/public/css`,
   },
 
+  assets: {
+    images: {
+      src: `${BASE_DIR}/assets/images/**`,
+      dest: `${BASE_DIST_DIR}/public/assets/images`
+    }
+  },
+
   tailwind: {
     content: [`${BASE_DIR}/**/*.{html,pug,js,ts,jsx,tsx}`]
   },
@@ -47,4 +54,4 @@ export default {
     pug: [`${BASE_DIR}/pug/**/*.pug`],
     watchConfig: true
   }
-}
+};
