@@ -109,7 +109,7 @@ function buildImages() {
     .pipe(changed(config.assets.images.dest))
     .pipe(imagemin([
       pngquant({
-        quality: "65-80",
+        quality: [0.65, 0.90],
         speed: 1,
         floyd: 0,
       }),
