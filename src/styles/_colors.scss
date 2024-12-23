@@ -1,3 +1,5 @@
+@use "utils/functions";
+
 :root {
     --ct-primary: 77, 255, 181;
     --ct-secondary: 25, 91, 255;
@@ -50,17 +52,17 @@
 }
 
 [class*="text--"] {
-    color: -color(text-color);
+    color: functions.color(text-color);
 }
 
 [class*="bg--"] {
-    background-color: -color(bg-color);
+    background-color: functions.color(bg-color);
 }
 
 .bg--surface {
-    background-color: -color(surface);
+    background-color: functions.color(surface);
 }
 
 .bg--background {
-    background-color: -color(background);
+    background-color: functions.color(background);
 }

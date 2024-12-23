@@ -1,3 +1,4 @@
+@use "sass:map";
 @mixin fillable-text {
     background-size: 200% 100%;
     background-position-x: 100%;
@@ -26,10 +27,10 @@ $breakpoints: (
 @mixin breakpoint($breakpoint, $direction: min) {
 
     //check if the supplied breakpoint exists in our breakpoits map
-    @if map-has-key($breakpoints, $breakpoint) {
-        $breakpoint-values: map-get($breakpoints, $breakpoint);
-        $breakpoint-min: map-get($breakpoint-values, min);
-        $breakpoint-max: map-get($breakpoint-values, max);
+    @if map.has-key($breakpoints, $breakpoint) {
+        $breakpoint-values: map.get($breakpoints, $breakpoint);
+        $breakpoint-min: map.get($breakpoint-values, min);
+        $breakpoint-max: map.get($breakpoint-values, max);
 
         //check if we are writing styles for larger or smaller screens
         @if $direction ==min {

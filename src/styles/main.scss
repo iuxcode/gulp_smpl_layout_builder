@@ -1,11 +1,11 @@
-@import "./tailwind";
+@use "tailwind";
 
-@import "./utils/functions";
-@import "./utils/mixins";
-@import "./vars";
-@import "./colors";
-@import "./reset";
-@import "./animations";
+@use "utils/functions";
+@use "utils/mixins";
+@use "vars";
+@use "colors";
+@use "reset";
+@use "animations";
 
 html,
 body {
@@ -19,21 +19,21 @@ body {
     font-style: normal;
     font-size: 0.95rem;
     margin: 0;
-    color: -color(text);
-    background: -color(background);
+    color: functions.color(text);
+    background: functions.color(background);
 
     :focus {
         outline: 0 !important;
     }
 
     ::-moz-selection {
-        background: -color(primary);
-        color: -color(text-accent);
+        background: functions.color(primary);
+        color: functions.color(text-accent);
     }
 
     ::selection {
-        background: -color(primary);
-        color: -color(text-accent);
+        background: functions.color(primary);
+        color: functions.color(text-accent);
     }
 
     .font--accent {
@@ -48,16 +48,16 @@ body {
             left: 0;
             height: 100%;
             width: 100%;
-            background-color: -color(black, 0.25);
+            background-color: functions.color(black, 0.25);
             z-index: 1;
         }
 
         &--dim::before {
-            background-color: -color(black, 0.55);
+            background-color: functions.color(black, 0.55);
         }
 
         &--full::before {
-            background-color: -color(black, 0.85);
+            background-color: functions.color(black, 0.85);
         }
     }
 

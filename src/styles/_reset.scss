@@ -1,3 +1,5 @@
+@use "utils/functions";
+
 * {
     box-sizing: border-box;
     outline: none;
@@ -11,11 +13,11 @@ button,
 }
 
 .pin-spacer {
-    z-index: -var(zindex-6) !important;
+    z-index: functions.var(zindex-6) !important;
 }
 
 .on-pin-spacer {
-    z-index: -var(zindex-5) !important;
+    z-index: functions.var(zindex-5) !important;
 }
 
 .z-1 {

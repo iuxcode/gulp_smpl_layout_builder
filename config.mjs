@@ -9,12 +9,12 @@ export default {
     mainEntry: `${BASE_DIR}/scripts/main.ts`,
     entries: `${BASE_DIR}/scripts/**/*.ts`,
     outDir: `${BASE_DIST_DIR}/public/js`,
-    outputFile: "[name].js"
+    outputFile: "[name].js",
   },
 
-  pug: {
-    entries: `${BASE_DIR}/pug/*.pug`,
-    outDir: BASE_DIST_DIR
+  html: {
+    src: ["./src/**/*.html", "!./src/**/*.partial.html"],
+    outDir: BASE_DIST_DIR,
   },
 
   sass: {
@@ -25,12 +25,12 @@ export default {
   assets: {
     images: {
       src: `${BASE_DIR}/assets/images/**`,
-      dest: `${BASE_DIST_DIR}/public/assets/images`
-    }
+      dest: `${BASE_DIST_DIR}/public/assets/images`,
+    },
   },
 
   tailwind: {
-    content: [`${BASE_DIR}/**/*.{html,pug,js,ts,jsx,tsx}`]
+    content: [`${BASE_DIR}/**/*.{html,pug,js,ts,jsx,tsx}`],
   },
 
   browserSync: {
@@ -44,14 +44,14 @@ export default {
     ghostMode: {
       clicks: false,
       forms: false,
-      scroll: false
-    }
+      scroll: false,
+    },
   },
 
   watch: {
     sass: [`${BASE_DIR}/styles/**/*.scss`],
     js: [`${BASE_DIR}/scripts/**/*.*`],
-    pug: [`${BASE_DIR}/pug/**/*.pug`],
-    watchConfig: true
-  }
+    html: [`${BASE_DIR}/**/*.html`],
+    watchConfig: true,
+  },
 };

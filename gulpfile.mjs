@@ -3,7 +3,6 @@ import _browserSync from "browser-sync";
 import rename from "gulp-rename";
 import plumber from "gulp-plumber";
 import beautify from "gulp-beautify";
-import pug from "gulp-pug";
 import * as dartSass from "sass";
 import gulpSass from "gulp-sass";
 import postcss from "gulp-postcss";
@@ -19,6 +18,7 @@ import mozjpeg from "imagemin-mozjpeg";
 import webpackConfig from "./webpack.config.mjs";
 import config from "./config.mjs";
 import dotenv from "dotenv";
+import fileinclude from "gulp-file-include";
 
 // eslint-disable-next-line no-undef
 const ENV = process.env;
@@ -36,10 +36,7 @@ function flushModule(path, callback) {
 function errorHandler(err) {
   // eslint-disable-next-line no-undef
   if (err || (stats && stats.compilation.errors.length > 0)) {
-    console.error(
-      "[-] Something went wrong: " + err.message + "\n",
-      err
-    );
+    console.error("[-] Something went wrong: " + err.message + "\n", err);
 
     // const error = err || stats.compilation.errors[0].error;
     // onError({ message: "<%= error.message %>" })(error);
@@ -48,39 +45,39 @@ function errorHandler(err) {
 }
 
 /// PUG task
-function buildPug() {
-  return gulp.src(config.pug.entries)
-    .pipe(plumber({ errorHandler }))
-    .pipe(changed(config.pug.outDir))
+const includeHTML = () =>
+  gulp
+    .src(config.html.src)
     .pipe(
-      pug({
-        // Your options in here.
-      })
+      fileinclude({
+        prefix: "@@",
+        basepath: "@file",
+      }),
     )
     .pipe(beautify.html({ indent_size: 2 }))
-    .pipe(gulp.dest(config.pug.outDir));
-}
+    .pipe(gulp.dest(config.html.outDir));
 
 /// Sass task
 function buildSass() {
   const sass = gulpSass(dartSass);
 
-  return gulp.src(config.sass.entries)
+  return gulp
+    .src(config.sass.entries)
     .pipe(plumber({ errorHandler: errorHandler }))
     .pipe(changed(config.sass.outDir))
     .pipe(
       sass({
         outputStyle: "expanded",
         importer: packageImporter({
-          extensions: [".scss", ".css"]
-        })
-      })
+          extensions: [".scss", ".css"],
+        }),
+      }),
     )
     .pipe(postcss())
     .pipe(
       autoprefixer({
-        cascade: false
-      })
+        cascade: false,
+      }),
     )
     .pipe(uglyCss({ compatibility: "ie8" }))
     .pipe(
@@ -88,7 +85,7 @@ function buildSass() {
         if (/^style_/.test(path.basename)) {
           path.basename = "style_latest";
         }
-      })
+      }),
     )
     .pipe(gulp.dest(config.sass.outDir))
     .pipe(browserSync.stream({ match: "**/*.css" }));
@@ -96,7 +93,8 @@ function buildSass() {
 
 /// Typescript task
 function buildTypescript() {
-  return gulp.src(config.js.entries)
+  return gulp
+    .src(config.js.entries)
     .pipe(plumber({ errorHandler }))
     .pipe(changed(config.js.outDir))
     .pipe(webpack(webpackConfig))
@@ -104,35 +102,35 @@ function buildTypescript() {
 }
 
 function buildImages() {
-  return gulp.src(config.assets.images.src)
+  return gulp
+    .src(config.assets.images.src)
     .pipe(plumber({ errorHandler }))
     .pipe(changed(config.assets.images.dest))
-    .pipe(imagemin([
-      pngquant({
-        quality: [0.65, 0.90],
-        speed: 1,
-        floyd: 0,
-      }),
-      mozjpeg({
-        quality: 85,
-        progressive: true
-      }),
-      svgo(),
-      optipng(),
-      gifsicle()
-    ]))
+    .pipe(
+      imagemin([
+        pngquant({
+          quality: [0.65, 0.9],
+          speed: 1,
+          floyd: 0,
+        }),
+        mozjpeg({
+          quality: 85,
+          progressive: true,
+        }),
+        svgo(),
+        optipng(),
+        gifsicle(),
+      ]),
+    )
     .pipe(gulp.dest(config.assets.images.dest));
 }
 
 /// Clean builded files
 function cleanGeneratedFiles() {
-  console.log(
-    "\n",
-    "[!] Cleaning dist folder for fresh start.\n"
-  );
-  return gulp.src(config.BASE_DIST_DIR, { read: false, allowEmpty: true }).pipe(
-    clean()
-  );
+  console.log("\n", "[!] Cleaning dist folder for fresh start.\n");
+  return gulp
+    .src(config.BASE_DIST_DIR, { read: false, allowEmpty: true })
+    .pipe(clean());
 }
 
 /// Load Previews on Browser on dev
@@ -142,8 +140,8 @@ function livePreview(done) {
     port: config.browserSync.port,
     server: {
       baseDir: config.browserSync.dest, // output directory,
-      index: "index.html"
-    }
+      index: "index.html",
+    },
   });
   done();
 }
@@ -157,35 +155,33 @@ function hotReload(done) {
 
 /// Watch for file changes and recompile
 function watchFiles(done) {
-  gulp.watch(
-    config.watch.pug,
-    gulp.series(buildPug, hotReload),
-  );
-  gulp.watch(
-    config.watch.js,
-    gulp.series(buildTypescript),
-  );
-  gulp.watch(
-    config.watch.sass,
-    gulp.series(buildSass),
-  );
+  gulp.watch(config.watch.html, gulp.series(includeHTML, hotReload));
+  gulp.watch(config.watch.js, gulp.series(buildTypescript));
+  gulp.watch(config.watch.sass, gulp.series(buildSass));
 
-  gulp.watch(
-    config.assets.images.src,
-    gulp.series(buildImages),
-  );
+  gulp.watch(config.assets.images.src, gulp.series(buildImages));
 
   if (config.watch.watchConfig) {
-    gulp.watch("./config.mjs",
-      gulp.series((cb) => flushModule("./config.mjs", cb), buildTypescript, buildPug)
+    gulp.watch(
+      "./config.mjs",
+      gulp.series(
+        (cb) => flushModule("./config.mjs", cb),
+        buildTypescript,
+        includeHTML,
+      ),
     );
 
-    gulp.watch("./webpack.config.mjs",
-      gulp.series((cb) => flushModule("./webpack.config.mjs", cb), buildTypescript)
+    gulp.watch(
+      "./webpack.config.mjs",
+      gulp.series(
+        (cb) => flushModule("./webpack.config.mjs", cb),
+        buildTypescript,
+      ),
     );
 
-    gulp.watch("./tailwind.config.js",
-      gulp.series((cb) => flushModule("./tailwind.config.js", cb), buildSass)
+    gulp.watch(
+      "./tailwind.config.js",
+      gulp.series((cb) => flushModule("./tailwind.config.js", cb), buildSass),
     );
   }
 
@@ -201,7 +197,7 @@ gulp.task("default", (done) => {
     cleanGeneratedFiles,
     buildImages,
     gulp.parallel(buildSass, buildTypescript),
-    buildPug
+    includeHTML,
   )(done);
 });
 
@@ -211,8 +207,8 @@ gulp.task("serve", (done) => {
     cleanGeneratedFiles,
     buildImages,
     gulp.parallel(buildSass, buildTypescript),
-    buildPug,
+    includeHTML,
     livePreview,
-    watchFiles
+    watchFiles,
   )(done);
 });
